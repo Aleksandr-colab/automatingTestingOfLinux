@@ -1,11 +1,19 @@
-import subprocess
-out = "/home/user/out"
-folder1 = "/home/user/folder1"
+import yaml
+from tests.sshcheckers import ssh_checkout_negative
+
+with open('config.yaml') as f:
+    data = yaml.safe_load(f)
 
 
-def checkout(cmd, text):
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
-    if (text in result.stdout or text in result.stderr) and result.returncode != 0:
-        return True
-    else:
-        return False
+class TestNegative:
+
+    def test_step1(self, make_bad_arx):
+        result1 = ssh_checkout_negative(f"{data['ip']}", f"{data['user']}", f"{data['password']}",
+                                        f"cd {data['folder_out']}; 7z e bad_arx.{data['type']} -o{data['folder_ext']} -y",
+                                        "ERRORS")
+        assert result1, "test1 FAIL"
+
+    def test_step2(self):
+        assert ssh_checkout_negative(f"{data['ip']}", f"{data['user']}", f"{data['password']}",
+                                     f"cd {data['folder_out']}; 7z t bad_arx.{data['type']}",  "ERRORS"), 'test2 FAIL'
+
